@@ -17,6 +17,9 @@ func main() {
 
 	fmt.Println(slisik) // Вывели слайс содержащий переменную в консоль
 
+	for _, runeValue := range slisik[0] { // Перебираем строку внутри слайса
+		fmt.Printf("%c ", runeValue)
+	}
 }
 ```
 
