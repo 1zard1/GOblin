@@ -1,0 +1,10 @@
+// Создаем переменную string, выводим ее в консоль
+
+package main
+
+import "fmt"
+
+func main() {
+	var helloVladislave string = "Hello Vladislave!"
+	fmt.Print(helloVladislave)
+}
