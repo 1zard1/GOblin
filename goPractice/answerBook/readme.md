@@ -383,5 +383,190 @@ func main() {
 }
 ```
 
+++++++++++
+ Задача 4
+++++++++++
+1. Как это работает, что не так, что поправить?
+```go
+func main() {
+  ch := make(chan bool)
+  ch <- true
+  go func() {
+    <-ch
+  }()
+  ch <-true
+}
+```
+Логика проста, записываем в канал тру, горутиной возвращаем значение из канала, но при попытке новой записи возникает дедлок. Фикс происходит простой буферизацией канала, что бы в него можно было записать не только 1 значение.
+Fix:
+```go
+func main() {
+  ch := make(chan bool, 1)
+  ch <- true
+  go func() {
+    <-ch
+  }()
+  ch <-true
+}
+```
 
+++++++++++
+ Задача 5
+++++++++++
+1. Как будет работать код?
+2. Как сделать так, чтобы выводился только первый ch?
+```go
+func main() {
+        ch := make(chan bool)
+        ch2 := make(chan bool)
+        ch3 := make(chan bool)
+        go func() {
+                ch <- true
+        }()
+        go func() {
+                ch2 <- true
+        }()
+        go func() {
+                ch3 <- true
+        }()
 
+        select {
+        case <-ch:
+                fmt.Printf("val from ch")
+        case <-ch2:
+                fmt.Printf("val from ch2")
+        case <-ch3:
+                fmt.Printf("val from ch3")
+        }
+}
+```
+В этом коде мы создаем 3 канала в которые посредством горутин записываются true значения. после этого конструкцией select возвращается значение горутина которай завершилась первой. Для того что бы выводить только ch мы можем использовать метод sleep, тем самым до завершения главной горутины будет успевать срабатывать только горутина ch. 
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func main() {
+	ch := make(chan bool)
+	ch2 := make(chan bool)
+	ch3 := make(chan bool)
+
+	go func() {
+		ch <- true
+	}()
+
+	go func() {
+		time.Sleep(10 * time.Second) // Слипаем ненужную горутину
+		ch2 <- true
+	}()
+	go func() {
+		time.Sleep(10 * time.Second) // Слипаем ненужную горутину
+		ch3 <- true
+	}()
+
+	select {
+	case <-ch:
+		fmt.Printf("val from ch\n")
+	case <-ch2:
+		fmt.Printf("val from ch2\n")
+	case <-ch3:
+		fmt.Printf("val from ch3\n")
+	}
+}
+```
+++++++++++
+ Задача 6
+++++++++++
+1. Что выведет код и как исправить?
+```go
+var globalMap = map[string][]int{"test": make([]int, 0), "test2": make([]int, 0), "test3": make([]int, 0)}
+var a = 0
+ 
+func main() {
+    wg := sync.WaitGroup{}
+    wg.Add(3)
+    go func() {
+        wg.Done()
+        a=10
+        globalMap["test"] = append(globalMap["test"], a)
+         
+    }()
+    go func() {
+        wg.Done()
+        a=11
+        globalMap["test2"] = append(globalMap["test2"], a)
+    }()
+    go func() {
+        wg.Done()
+        a=12
+        globalMap["test3"] = append(globalMap["test3"], a)
+    }()
+    wg.Wait()
+    fmt.Printf("%v", globalMap)
+    fmt.Printf("%d", a)
+}
+```
+Код выведет мапу с рандомно разбросанными 10 11 и 12, проблема возникает изза конкурентного доступа к переменной a. Что бы это исправить воспользуемся пакетом sync, а именно мьютексами.
+```go
+package main
+
+import (
+	"fmt"
+	"sync"
+)
+
+var globalMap = map[string][]int{"test": make([]int, 0), "test2": make([]int, 0), "test3": make([]int, 0)}
+var a = 0
+var mu sync.Mutex
+
+func main() {
+	wg := sync.WaitGroup{}
+	wg.Add(3)
+
+	go func() {
+		defer wg.Done()
+		mu.Lock()
+		a = 10
+		globalMap["test"] = append(globalMap["test"], a)
+		mu.Unlock()
+	}()
+
+	go func() {
+		defer wg.Done()
+		mu.Lock()
+		a = 11
+		globalMap["test2"] = append(globalMap["test2"], a)
+		mu.Unlock()
+	}()
+
+	go func() {
+		defer wg.Done()
+		mu.Lock()
+		a = 12
+		globalMap["test3"] = append(globalMap["test3"], a)
+		mu.Unlock()
+	}()
+
+	wg.Wait()
+	fmt.Printf("%v\n", globalMap)
+	fmt.Printf("%d\n", a)
+}
+```
+# ПРОПУЩЕНА! ПРОПУЩЕНА! ПРОПУЩЕНА! ПРОПУЩЕНА! ПРОПУЩЕНА! ПРОПУЩЕНА! ПРОПУЩЕНА! ПРОПУЩЕНА! ПРОПУЩЕНА! ПРОПУЩЕНА! ПРОПУЩЕНА! ПРОПУЩЕНА! 
+++++++++++
+ Задача 7
+++++++++++
+
+type Result struct{}
+
+type SearchFunc func(ctx context.Context, query string) (Result, error)
+
+func MultiSearch(ctx context.Context, query string, sfs []SearchFunc) (Result, error) {
+    // Нужно реализовать функцию, которая выполняет поиск query во всех переданных SearchFunc
+    // Когда получаем первый успешный результат - отдаем его сразу. Если все SearchFunc отработали
+    // с ошибкой - отдаем последнюю полученную ошибку
+} 
+# ПРОПУЩЕНА! ПРОПУЩЕНА! ПРОПУЩЕНА! ПРОПУЩЕНА! ПРОПУЩЕНА! ПРОПУЩЕНА! ПРОПУЩЕНА! ПРОПУЩЕНА! ПРОПУЩЕНА! ПРОПУЩЕНА! ПРОПУЩЕНА! ПРОПУЩЕНА! 
