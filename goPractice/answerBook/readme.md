@@ -569,4 +569,50 @@ func MultiSearch(ctx context.Context, query string, sfs []SearchFunc) (Result, e
     // Когда получаем первый успешный результат - отдаем его сразу. Если все SearchFunc отработали
     // с ошибкой - отдаем последнюю полученную ошибку
 } 
-# ПРОПУЩЕНА! ПРОПУЩЕНА! ПРОПУЩЕНА! ПРОПУЩЕНА!
+
+++++++++++
+ Задача 8
+++++++++++
+1. Что выведется и как исправить?
+
+func main() {
+  var counter int
+  for i := 0; i < 1000; i++ {
+    go func() {
+      counter++
+    }()
+  }
+  fmt.Println(counter)
+}
+Output: любое число от 0 до 1000. Исправляется этот код с помощью WaitGroup и добавления еще одного цикла.
+```go
+package main
+
+import (
+	"fmt"
+	"sync"
+)
+
+func main() {
+	ch := make(chan int, 1000) // Объявляем канал с буфером на 1000 элементов
+	var wg sync.WaitGroup      // Создаем WaitGroup для ожидания завершения всех горутин
+
+	for i := 0; i < 1000; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			ch <- i
+		}(i)
+	}
+
+	wg.Wait() // Ждем завершения всех горутин
+	close(ch) // Закрываем канал, чтобы завершить цикл range
+
+	for val := range ch {
+		fmt.Println(val)
+	}
+}
+```
+
+
+
