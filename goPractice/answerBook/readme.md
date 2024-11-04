@@ -574,7 +574,7 @@ func MultiSearch(ctx context.Context, query string, sfs []SearchFunc) (Result, e
  Задача 8
 ++++++++++
 1. Что выведется и как исправить?
-
+```go
 func main() {
   var counter int
   for i := 0; i < 1000; i++ {
@@ -584,6 +584,7 @@ func main() {
   }
   fmt.Println(counter)
 }
+```
 Output: любое число от 0 до 1000. Исправляется этот код с помощью WaitGroup и добавления еще одного цикла.
 ```go
 package main
