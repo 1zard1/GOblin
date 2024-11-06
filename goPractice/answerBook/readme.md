@@ -555,11 +555,10 @@ func main() {
 	fmt.Printf("%d\n", a)
 }
 ```
-ПРОПУЩЕНА! ПРОПУЩЕНА! ПРОПУЩЕНА! ПРОПУЩЕНА! 
 ++++++++++
  Задача 7
 ++++++++++
-
+```go
 type Result struct{}
 
 type SearchFunc func(ctx context.Context, query string) (Result, error)
@@ -569,6 +568,35 @@ func MultiSearch(ctx context.Context, query string, sfs []SearchFunc) (Result, e
     // Когда получаем первый успешный результат - отдаем его сразу. Если все SearchFunc отработали
     // с ошибкой - отдаем последнюю полученную ошибку
 } 
+```
+
+```go
+package main
+
+import (
+	"context"
+	"errors"
+)
+
+type Result struct{}
+
+type SearchFunc func(ctx context.Context, query string) (Result, error)
+
+func MultiSearch(ctx context.Context, query string, sfs []SearchFunc) (Result, error) {
+	var lastErr error
+	for _, i := range sfs {
+		result, err := i(ctx, query)
+		if err == nil {
+			return result, nil
+		}
+		lastErr = err
+	}
+	if lastErr != nil {
+		return Result{}, lastErr
+	}
+	return Result{}, errors.New("no search functions provided")
+}
+```
 
 ++++++++++
  Задача 8
@@ -615,5 +643,29 @@ func main() {
 }
 ```
 
+
+++++++++++
+ Задача 9
+++++++++++
+1. Что выведется и как исправить?
+2. Что поправить, чтобы сохранить порядок?
+```go
+func main() {
+  m := make(char string, 3)
+  cnt := 5
+  for i := 0; i < cnt; i++ {
+    go func() {
+      m <- fmt.Sprintf("Goroutine %d", i)
+    }()
+  }
+  for i := 0; i < cnt; i++ {
+    go ReceiveFromCh(m)
+  }
+}
+func ReceiveFromCh(ch chan string) {
+  fmt.Println(<-ch)
+}
+```
+Output: ничего. Исправляется при помощи пакета sync,     
 
 
