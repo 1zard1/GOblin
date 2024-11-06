@@ -666,6 +666,44 @@ func ReceiveFromCh(ch chan string) {
   fmt.Println(<-ch)
 }
 ```
-Output: ничего. Исправляется при помощи пакета sync,     
+Output: ничего. Исправляется при помощи пакета sync, а именно WaitGroup.
+```go
+package main
+
+import (
+	"fmt"
+	"sync"
+)
+
+func main() {
+	var wg sync.WaitGroup
+	m := make(chan string, 5) // Increase buffer size to avoid deadlock
+	cnt := 5
+
+	for i := 0; i < cnt; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			m <- fmt.Sprintf("Goroutine %d", i)
+		}(i)
+	}
+
+	for i := 0; i < cnt; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			ReceiveFromCh(m)
+		}()
+	}
+
+	wg.Wait()
+	close(m) // Close the channel after all sends are done
+}
+
+func ReceiveFromCh(ch chan string) {
+	fmt.Println(<-ch)
+}
+
+```
 
 
